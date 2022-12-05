@@ -261,7 +261,8 @@ def graph_barcode(persistence, homology_group = 0):
     plt.ylabel("Betti dim %s" % (homology_group,))
     plt.show()
     
-def Persistent_Homology(data,epsilon,k):
+def Persistent_Homology(data,epsilon,k,
+                        buildGraph,ripsFiltration,filterBoundaryMatrix,reduceBoundaryMatrix,readIntervals,readPersistence,graph_barcode):
   graph = buildGraph(raw_data=data, epsilon=epsilon) #epsilon = 9 will build a "maximal complex"
   ripsComplex = ripsFiltration(graph, k=k)
   # drawComplex(origData=data, ripsComplex=ripsComplex[0])
