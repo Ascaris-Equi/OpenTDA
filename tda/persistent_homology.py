@@ -169,33 +169,40 @@ def filterBoundaryMatrix(filterComplex):
     return bmatrix
 
 
-def readIntervals(reduced_matrix, filterValues):
+ef readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the reduced boundary matrix AND the memory matrix
+    #store intervals as a list of 2-element lists, e.g. [2,4] = start at "time" point 2, end at "time" point 4
+    #note the "time" points are actually just the simplex index number for now. we will convert to epsilon value later
     intervals = []
-    m = reduced_matrix[0].shape[1]
-    for j in range(m):
-        low_j = low(j, reduced_matrix)
-        if low_j == (m - 1):
+    #loop through each column j
+    #if low(j) = -1 (undefined, all zeros) then j signifies the birth of a new feature j
+    #if low(j) = i (defined), then j signifies the death of feature i
+    for j in range(reduced_matrix[0].shape[1]): #for each column (its a square matrix so doesn't matter...)
+        low_j = low(j, reduced_matrix[0])
+        if low_j == -1:
             interval_start = [j, -1]
-            intervals.append(interval_start)
-
-        else:
-            feature = intervals.index([low_j, -1])
-            intervals[feature][1] = j
+            intervals.append(interval_start) # -1 is a temporary placeholder until we update with death time
+            #if no death time, then -1 signifies feature has no end (start -> infinity)
+            #-1 turns out to be very useful because in python if we access the list x[-1] then that will return the
+            #last element in that list. in effect if we leave the end point of an interval to be -1
+            # then we're saying the feature lasts until the very end
+        else: #death of feature
+            feature = intervals.index([low_j, -1]) #find the feature [start,end] so we can update the end point
+            intervals[feature][1] = j #j is the death point
+            #if the interval start point and end point are the same, then this feature begins and dies instantly
+            #so it is a useless interval and we dont want to waste memory keeping it
             epsilon_start = filterValues[intervals[feature][0]]
             epsilon_end = filterValues[j]
-            if epsilon_start == epsilon_end:
-                intervals.remove(intervals[feature])
+            if epsilon_start == epsilon_end: intervals.remove(intervals[feature])
 
     return intervals
 
-
-def readPersistence(intervals, filterComplex):
+def readPersistence(intervals, filterComplex): 
+    #this converts intervals into epsilon format and figures out which homology group each interval belongs to
     persistence = []
     for interval in intervals:
         start = interval[0]
         end = interval[1]
-
-        homology_group = (len(filterComplex[0][start]) - 1)
+        homology_group = (len(filterComplex[0][start]) - 1) #filterComplex is a list of lists [complex, filter values]
         epsilon_start = filterComplex[1][start]
         epsilon_end = filterComplex[1][end]
         persistence.append([homology_group, [epsilon_start, epsilon_end]])
