@@ -169,7 +169,7 @@ def filterBoundaryMatrix(filterComplex):
     return bmatrix
 
 
-ef readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the reduced boundary matrix AND the memory matrix
+def readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the reduced boundary matrix AND the memory matrix
     #store intervals as a list of 2-element lists, e.g. [2,4] = start at "time" point 2, end at "time" point 4
     #note the "time" points are actually just the simplex index number for now. we will convert to epsilon value later
     intervals = []
