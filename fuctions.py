@@ -9,7 +9,7 @@ def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
 
 #Build neighorbood graph
-#@jit(nopython=True)
+@jit(nopython=True)
 def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
     nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
     edges = [] #initialize empty edge array
