@@ -171,7 +171,7 @@ def filterBoundaryMatrix(filterComplex):
 
 def readIntervals(reduced_matrix, filterValues):
     intervals = []
-    m = reduced_matrix.shape[1]
+    m = reduced_matrix[0].shape[1]
     for j in range(m):
         low_j = low(j, reduced_matrix)
         if low_j == (m - 1):
