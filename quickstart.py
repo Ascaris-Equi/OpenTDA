@@ -1,4 +1,3 @@
-%%time
 def Persistent_Homology(data,epsilon,k):
   graph = buildGraph(raw_data=data, epsilon=epsilon) #epsilon = 9 will build a "maximal complex"
   ripsComplex = ripsFiltration(graph, k=k)
