@@ -5,7 +5,7 @@ import numpy as np
 import networkx as nx
 from scipy.spatial.distance import squareform, pdist
 
-from OpenTDA.tda.snf import low, smith_normal_form
+from .snf import low, smith_normal_form
 
 __all__ = ['PersistentHomology']
 
