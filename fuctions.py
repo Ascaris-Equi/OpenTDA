@@ -1,5 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import itertools
+import functools
 
 def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
