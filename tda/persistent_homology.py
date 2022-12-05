@@ -5,10 +5,42 @@ import numpy as np
 import networkx as nx
 from scipy.spatial.distance import squareform, pdist
 
-from .snf import low, smith_normal_form
-
 __all__ = ['PersistentHomology']
 
+def low(i, matrix):
+    col = matrix[:,i]
+    col_len = len(col)
+    for i in range( (col_len-1) , -1, -1): #loop through column from bottom until you find the first 1
+        if col[i] == 1: return i
+    return -1 #if no lowest 1 (e.g. column of all zeros), return -1 to be 'undefined'
+
+#checks if the boundary matrix is fully reduced
+def isReduced(matrix):
+    for j in range(matrix.shape[1]): #iterate through columns
+        for i in range(j): #iterate through columns before column j
+            low_j = low(j, matrix)
+            low_i = low(i, matrix)
+            if (low_j == low_i and low_j != -1):
+                return i,j #return column i to add to column j
+    return [0,0]
+
+#the main function to iteratively reduce the boundary matrix
+def reduceBoundaryMatrix(matrix): 
+    #this refers to column index in the boundary matrix
+    reduced_matrix = matrix.copy()
+    matrix_shape = reduced_matrix.shape
+    memory = np.identity(matrix_shape[1], dtype='>i8') #this matrix will store the column additions we make
+    r = isReduced(reduced_matrix)
+    while (r != [0,0]):
+        i = r[0]
+        j = r[1]
+        col_j = reduced_matrix[:,j]
+        col_i = reduced_matrix[:,i]
+        #print("Mod: add col %s to %s \n" % (i+1,j+1)) #Uncomment to see what mods are made
+        reduced_matrix[:,j] = np.bitwise_xor(col_i,col_j) #add column i to j
+        memory[i,j] = 1
+        r = isReduced(reduced_matrix)
+    return reduced_matrix, memory
 
 def buildGraph(data, epsilon=1., metric='euclidean', p=2):
     D = squareform(pdist(data, metric=metric, p=p))
