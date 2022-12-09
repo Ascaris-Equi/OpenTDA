@@ -66,23 +66,6 @@ def drawComplex(origData, ripsComplex):
 def euclidianDist(a,b): #this is the default metric we use but you can use whatever distance function you want
     return np.linalg.norm(a - b) #euclidian distance metric
 
-
-#Build neighorbood graph
-def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
-    nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
-    edges = [] #initialize empty edge array
-    weights = [] #initialize weight array, stores the weight (which in this case is the distance) for each edge
-    for i in range(raw_data.shape[0]): #iterate through each data point
-        for j in range(raw_data.shape[0]-i): #inner loop to calculate pairwise point distances
-            a = raw_data[i]
-            b = raw_data[j+i] #each simplex is a set (no order), hence [0,1] = [1,0]; so only store one
-            if (i != j+i):
-                dist = metric(a,b)
-                if dist <= epsilon:
-                    edges.append({i,j+i}) #add edge if distance between points is < epsilon
-                    weights.append(dist)
-    return nodes,edges,weights
-
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
