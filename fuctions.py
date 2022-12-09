@@ -44,7 +44,7 @@ def rips(graph, k):
 
 def drawComplex(origData, ripsComplex, axes=[-6,8,-6,6]):
     plt.clf()
-    plt.axis(axes)
+    plt.axis()
     plt.scatter(origData[:,0],origData[:,1]) #plotting just for clarity
     for i, txt in enumerate(origData):
         plt.annotate(i, (origData[i][0]+0.05, origData[i][1])) #add labels
