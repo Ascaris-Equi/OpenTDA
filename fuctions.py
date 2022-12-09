@@ -42,7 +42,7 @@ def rips(graph, k):
                 VRcomplex.append(set.union(simplex,{nbr}))
     return VRcomplex
 
-def drawComplex(origData, ripsComplex, axes=[-6,8,-6,6]):
+def drawComplex(origData, ripsComplex):
     plt.clf()
     plt.axis()
     plt.scatter(origData[:,0],origData[:,1]) #plotting just for clarity
