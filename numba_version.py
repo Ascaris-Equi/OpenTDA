@@ -9,7 +9,6 @@ from numba import jit
 def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
 
-
 #Build neighorbood graph
 @jit(nopython=True)
 def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
@@ -28,21 +27,28 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
     return nodes,edges,weights
 
 @jit(nopython=True)
-def lower_nbrs(nodeSet, edgeSet, node):
+def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
-def rips(graph, k):
-    nodes, edges = graph[0:2]
+def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
+    nodes, edges, weights = graph
     VRcomplex = [{n} for n in nodes]
-    for e in edges: #add 1-simplices (edges)
-        VRcomplex.append(e)
-    for i in range(k):
-        for simplex in [x for x in VRcomplex if len(x)==i+2]: #skip 0-simplices
-            #for each u in simplex
-            nbrs = set.intersection(*[lower_nbrs(nodes, edges, z) for z in simplex])
-            for nbr in nbrs:
-                VRcomplex.append(set.union(simplex,{nbr}))
-    return VRcomplex
+    filter_values = [0 for j in VRcomplex] #vertices have filter value of 0
+    for i in range(len(edges)): #add 1-simplices (edges) and associated filter values
+        VRcomplex.append(edges[i])
+        filter_values.append(weights[i])
+    if k > 1:
+        for i in range(k):
+            for simplex in [x for x in VRcomplex if len(x)==i+2]: #skip 0-simplices and 1-simplices
+                #for each u in simplex
+                nbrs = set.intersection(*[lower_nbrs(nodes, edges, z) for z in simplex])
+                for nbr in nbrs:
+                    newSimplex = set.union(simplex,{nbr})
+                    VRcomplex.append(newSimplex)
+                    filter_values.append(getFilterValue(newSimplex, VRcomplex, filter_values))
+
+    return sortComplex(VRcomplex, filter_values) #sort simplices according to filter values
+
 
 def drawComplex(origData, ripsComplex):
     plt.clf()
@@ -65,30 +71,6 @@ def drawComplex(origData, ripsComplex):
         line = plt.Polygon([pt1,pt2,pt3], closed=False, color="blue",alpha=0.3, fill=True, edgecolor=None)
         plt.gca().add_line(line)
     plt.show()
-def euclidianDist(a,b): #this is the default metric we use but you can use whatever distance function you want
-    return np.linalg.norm(a - b) #euclidian distance metric
-
-def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
-    return {x for x in nodeSet if {x,node} in edgeSet and node > x}
-
-def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
-    nodes, edges, weights = graph
-    VRcomplex = [{n} for n in nodes]
-    filter_values = [0 for j in VRcomplex] #vertices have filter value of 0
-    for i in range(len(edges)): #add 1-simplices (edges) and associated filter values
-        VRcomplex.append(edges[i])
-        filter_values.append(weights[i])
-    if k > 1:
-        for i in range(k):
-            for simplex in [x for x in VRcomplex if len(x)==i+2]: #skip 0-simplices and 1-simplices
-                #for each u in simplex
-                nbrs = set.intersection(*[lower_nbrs(nodes, edges, z) for z in simplex])
-                for nbr in nbrs:
-                    newSimplex = set.union(simplex,{nbr})
-                    VRcomplex.append(newSimplex)
-                    filter_values.append(getFilterValue(newSimplex, VRcomplex, filter_values))
-
-    return sortComplex(VRcomplex, filter_values) #sort simplices according to filter values
 
 def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
     oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
