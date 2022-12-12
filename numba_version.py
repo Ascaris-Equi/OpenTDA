@@ -40,6 +40,16 @@ def getFilterValue(simplex, edges, weights): #filter value is the maximum weight
     return max_weight
 
 @jit(nopython=True)
+def sortComplex(filterComplex, filterValues): #need simplices in filtration have a total order
+    #sort simplices in filtration by filter values
+    pairedList = zip(filterComplex, filterValues)
+    #since I'm using Python 3.5+, no longer supports custom compare, need conversion helper function..its ok
+    sortedComplex = sorted(pairedList, key=functools.cmp_to_key(compare)) 
+    sortedComplex = [list(t) for t in zip(*sortedComplex)]
+    #then sort >= 1 simplices in each chain group by the arbitrary total order on the vertices
+    orderValues = [x for x in range(len(filterComplex))]
+    
+@jit(nopython=True)
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
     VRcomplex = [{n} for n in nodes]
@@ -102,14 +112,6 @@ def compare(item1, item2):
         else:
             return -1
 
-def sortComplex(filterComplex, filterValues): #need simplices in filtration have a total order
-    #sort simplices in filtration by filter values
-    pairedList = zip(filterComplex, filterValues)
-    #since I'm using Python 3.5+, no longer supports custom compare, need conversion helper function..its ok
-    sortedComplex = sorted(pairedList, key=functools.cmp_to_key(compare)) 
-    sortedComplex = [list(t) for t in zip(*sortedComplex)]
-    #then sort >= 1 simplices in each chain group by the arbitrary total order on the vertices
-    orderValues = [x for x in range(len(filterComplex))]
     return sortedComplex
 def nSimplices(n, filterComplex):
     nchain = []
