@@ -6,6 +6,7 @@ import functools
 def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
 
+
 #Build neighorbood graph
 def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
     nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
@@ -18,8 +19,8 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
             if (i != j+i):
                 dist = metric(a,b)
                 if dist <= epsilon:
-                    edges.append({i,j+i}) #add edge
-                    weights.append([len(edges)-1,dist]) #store index and weight
+                    edges.append({i,j+i}) #add edge if distance between points is < epsilon
+                    weights.append(dist)
     return nodes,edges,weights
 
 def lower_nbrs(nodeSet, edgeSet, node):
