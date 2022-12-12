@@ -28,22 +28,7 @@ def buildGraph_numba(raw_data, epsilon = 3.1, metric=euclidianDist_numba): #raw_
                     weights.append(dist)
     return nodes,edges,weights
 
-def lower_nbrs(nodeSet, edgeSet, node):
-    return {x for x in nodeSet if {x,node} in edgeSet and node > x}
-
-def rips(graph, k):
-    nodes, edges = graph[0:2]
-    VRcomplex = [{n} for n in nodes]
-    for e in edges: #add 1-simplices (edges)
-        VRcomplex.append(e)
-    for i in range(k):
-        for simplex in [x for x in VRcomplex if len(x)==i+2]: #skip 0-simplices
-            #for each u in simplex
-            nbrs = set.intersection(*[lower_nbrs(nodes, edges, z) for z in simplex])
-            for nbr in nbrs:
-                VRcomplex.append(set.union(simplex,{nbr}))
-    return VRcomplex
-
+@jit(nopython=True)
 def drawComplex(origData, ripsComplex):
     plt.clf()
     plt.axis()
@@ -65,12 +50,12 @@ def drawComplex(origData, ripsComplex):
         line = plt.Polygon([pt1,pt2,pt3], closed=False, color="blue",alpha=0.3, fill=True, edgecolor=None)
         plt.gca().add_line(line)
     plt.show()
-def euclidianDist(a,b): #this is the default metric we use but you can use whatever distance function you want
-    return np.linalg.norm(a - b) #euclidian distance metric
-
+    
+@jit(nopython=True)
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
+@jit(nopython=True)
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
     VRcomplex = [{n} for n in nodes]
@@ -90,6 +75,7 @@ def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (mi
 
     return sortComplex(VRcomplex, filter_values) #sort simplices according to filter values
 
+@jit(nopython=True)
 def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
     oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
     max_weight = 0
@@ -98,7 +84,7 @@ def getFilterValue(simplex, edges, weights): #filter value is the maximum weight
         if filter_value > max_weight: max_weight = filter_value
     return max_weight
 
-
+@jit(nopython=True)
 def compare(item1, item2): 
     #comparison function that will provide the basis for our total order on the simpices
     #each item represents a simplex, bundled as a list [simplex, filter value] e.g. [{0,1}, 4]
@@ -118,7 +104,8 @@ def compare(item1, item2):
             return 1
         else:
             return -1
-
+        
+@jit(nopython=True)
 def sortComplex(filterComplex, filterValues): #need simplices in filtration have a total order
     #sort simplices in filtration by filter values
     pairedList = zip(filterComplex, filterValues)
@@ -128,6 +115,8 @@ def sortComplex(filterComplex, filterValues): #need simplices in filtration have
     #then sort >= 1 simplices in each chain group by the arbitrary total order on the vertices
     orderValues = [x for x in range(len(filterComplex))]
     return sortedComplex
+
+@jit(nopython=True)
 def nSimplices(n, filterComplex):
     nchain = []
     nfilters = []
@@ -140,6 +129,7 @@ def nSimplices(n, filterComplex):
     return nchain, nfilters
 
 #check if simplex is a face of another simplex
+@jit(nopython=True)
 def checkFace(face, simplex):
     if simplex == 0:
         return 1
@@ -149,6 +139,7 @@ def checkFace(face, simplex):
         return 0
 
 #build boundary matrix for dimension n ---> (n-1) = p
+@jit(nopython=True)
 def filterBoundaryMatrix(filterComplex):
     bmatrix = np.zeros((len(filterComplex[0]),len(filterComplex[0])), dtype='>i8')
     #bmatrix[0,:] = 0 #add "zero-th" dimension as first row/column, makes algorithm easier later on
@@ -162,6 +153,8 @@ def filterBoundaryMatrix(filterComplex):
         i += 1
     return bmatrix
 #returns row index of lowest "1" in a column i in the boundary matrix
+
+@jit(nopython=True)
 def low(i, matrix):
     col = matrix[:,i]
     col_len = len(col)
@@ -170,6 +163,7 @@ def low(i, matrix):
     return -1 #if no lowest 1 (e.g. column of all zeros), return -1 to be 'undefined'
 
 #checks if the boundary matrix is fully reduced
+@jit(nopython=True)
 def isReduced(matrix):
     for j in range(matrix.shape[1]): #iterate through columns
         for i in range(j): #iterate through columns before column j
@@ -180,6 +174,7 @@ def isReduced(matrix):
     return [0,0]
 
 #the main function to iteratively reduce the boundary matrix
+@jit(nopython=True)
 def reduceBoundaryMatrix(matrix): 
     #this refers to column index in the boundary matrix
     reduced_matrix = matrix.copy()
@@ -196,6 +191,8 @@ def reduceBoundaryMatrix(matrix):
         memory[i,j] = 1
         r = isReduced(reduced_matrix)
     return reduced_matrix, memory
+
+@jit(nopython=True)
 def readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the reduced boundary matrix AND the memory matrix
     #store intervals as a list of 2-element lists, e.g. [2,4] = start at "time" point 2, end at "time" point 4
     #note the "time" points are actually just the simplex index number for now. we will convert to epsilon value later
@@ -223,6 +220,7 @@ def readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the re
 
     return intervals
 
+@jit(nopython=True)
 def readPersistence(intervals, filterComplex): 
     #this converts intervals into epsilon format and figures out which homology group each interval belongs to
     persistence = []
@@ -236,6 +234,7 @@ def readPersistence(intervals, filterComplex):
 
     return persistence
 
+@jit(nopython=True)
 def graph_barcode(persistence, homology_group = 0): 
     #this function just produces the barcode graph for each homology group
     xstart = [s[1][0] for s in persistence if s[0] == homology_group]
