@@ -12,6 +12,7 @@ def euclidianDist_numba(a,b):#only float support
 
 
 #Build neighorbood graph
+@jit(nopython=True) 
 def buildGraph_numba(raw_data, epsilon = 3.1, metric=euclidianDist_numba): #raw_data is a numpy array
     nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
     edges = [] #initialize empty edge array
