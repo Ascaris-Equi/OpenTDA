@@ -26,11 +26,13 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
                     weights.append(dist)
     return nodes,edges,weights
 
-@jit(nopython=True)
+import numba
+from numba import jit
+import itertools
+
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
-@jit(nopython=True)
 def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
     oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
     max_weight = 0
@@ -39,7 +41,28 @@ def getFilterValue(simplex, edges, weights): #filter value is the maximum weight
         if filter_value > max_weight: max_weight = filter_value
     return max_weight
 
-@jit(nopython=True)
+def compare(item1, item2): 
+    #comparison function that will provide the basis for our total order on the simpices
+    #each item represents a simplex, bundled as a list [simplex, filter value] e.g. [{0,1}, 4]
+    if len(item1[0]) == len(item2[0]):
+        if item1[1] == item2[1]: #if both items have same filter value
+            if sum(item1[0]) > sum(item2[0]):
+                return 1
+            else:
+                return -1
+        else:
+            if item1[1] > item2[1]:
+                return 1
+            else:
+                return -1
+    else:
+        if len(item1[0]) > len(item2[0]):
+            return 1
+        else:
+            return -1
+
+    return sortedComplex
+
 def sortComplex(filterComplex, filterValues): #need simplices in filtration have a total order
     #sort simplices in filtration by filter values
     pairedList = zip(filterComplex, filterValues)
@@ -48,8 +71,7 @@ def sortComplex(filterComplex, filterValues): #need simplices in filtration have
     sortedComplex = [list(t) for t in zip(*sortedComplex)]
     #then sort >= 1 simplices in each chain group by the arbitrary total order on the vertices
     orderValues = [x for x in range(len(filterComplex))]
-    
-@jit(nopython=True)
+        
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
     VRcomplex = [{n} for n in nodes]
@@ -92,27 +114,6 @@ def drawComplex(origData, ripsComplex):
         plt.gca().add_line(line)
     plt.show()
 
-def compare(item1, item2): 
-    #comparison function that will provide the basis for our total order on the simpices
-    #each item represents a simplex, bundled as a list [simplex, filter value] e.g. [{0,1}, 4]
-    if len(item1[0]) == len(item2[0]):
-        if item1[1] == item2[1]: #if both items have same filter value
-            if sum(item1[0]) > sum(item2[0]):
-                return 1
-            else:
-                return -1
-        else:
-            if item1[1] > item2[1]:
-                return 1
-            else:
-                return -1
-    else:
-        if len(item1[0]) > len(item2[0]):
-            return 1
-        else:
-            return -1
-
-    return sortedComplex
 def nSimplices(n, filterComplex):
     nchain = []
     nfilters = []
