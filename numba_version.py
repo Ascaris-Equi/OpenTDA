@@ -31,6 +31,15 @@ def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ord
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
 @jit(nopython=True)
+def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
+    oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
+    max_weight = 0
+    for oneSimplex in oneSimplices:
+        filter_value = weights[edges.index(set(oneSimplex))]
+        if filter_value > max_weight: max_weight = filter_value
+    return max_weight
+
+@jit(nopython=True)
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
     VRcomplex = [{n} for n in nodes]
@@ -72,15 +81,6 @@ def drawComplex(origData, ripsComplex):
         line = plt.Polygon([pt1,pt2,pt3], closed=False, color="blue",alpha=0.3, fill=True, edgecolor=None)
         plt.gca().add_line(line)
     plt.show()
-
-def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
-    oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
-    max_weight = 0
-    for oneSimplex in oneSimplices:
-        filter_value = weights[edges.index(set(oneSimplex))]
-        if filter_value > max_weight: max_weight = filter_value
-    return max_weight
-
 
 def compare(item1, item2): 
     #comparison function that will provide the basis for our total order on the simpices
