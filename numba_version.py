@@ -6,12 +6,12 @@ import numba
 from numba import jit
 from numba import njit
 
-@njit
+@njit(nogil=True)
 def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
 
 #Build neighorbood graph
-@njit
+@njit(nogil=True)
 def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
     nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
     edges = [] #initialize empty edge array
@@ -157,7 +157,7 @@ def filterBoundaryMatrix(filterComplex):
 #returns row index of lowest "1" in a column i in the boundary matrix
 
 #returns row index of lowest "1" in a column i in the boundary matrix
-@njit(fastmath=True)
+@njit(nogil=True,fastmath=True)
 def low(i, matrix):
     col = matrix[:,i]
     col_len = len(col)
