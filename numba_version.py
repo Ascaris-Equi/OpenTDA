@@ -67,6 +67,7 @@ def sortComplex(filterComplex, filterValues): #need simplices in filtration have
     sortedComplex = [list(t) for t in zip(*sortedComplex)]
     #then sort >= 1 simplices in each chain group by the arbitrary total order on the vertices
     orderValues = [x for x in range(len(filterComplex))]
+    return sortedComplex
         
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
