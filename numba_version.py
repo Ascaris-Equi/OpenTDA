@@ -5,12 +5,12 @@ import functools
 import numba
 from numba import jit
 
-@jit(nopython=True)
+@njit
 def euclidianDist(a,b):
     return np.linalg.norm(a - b) #euclidian distance metric
 
 #Build neighorbood graph
-@jit(nopython=True)
+@njit
 def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a numpy array
     nodes = [x for x in range(raw_data.shape[0])] #initialize node set, reference indices from original data array
     edges = [] #initialize empty edge array
@@ -26,6 +26,7 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
                     weights.append(dist)
     return nodes,edges,weights
 
+@njit
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
