@@ -157,7 +157,7 @@ def filterBoundaryMatrix(filterComplex):
 #returns row index of lowest "1" in a column i in the boundary matrix
 
 #returns row index of lowest "1" in a column i in the boundary matrix
-@njit
+@njit(fastmath=True)
 def low(i, matrix):
     col = matrix[:,i]
     col_len = len(col)
@@ -166,7 +166,7 @@ def low(i, matrix):
     return -1 #if no lowest 1 (e.g. column of all zeros), return -1 to be 'undefined'
 
 #checks if the boundary matrix is fully reduced
-@jit
+@jit(parallel=True,fastmath=True)
 def isReduced(matrix):
     for j in range(matrix.shape[1]): #iterate through columns
         for i in range(j): #iterate through columns before column j
@@ -177,7 +177,7 @@ def isReduced(matrix):
     return [0,0]
 
 #the main function to iteratively reduce the boundary matrix
-@jit
+@jit(parallel=True,fastmath=True)
 def reduceBoundaryMatrix(matrix): 
     #this refers to column index in the boundary matrix
     reduced_matrix = matrix.copy()
