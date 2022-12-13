@@ -26,10 +26,6 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
                     weights.append(dist)
     return nodes,edges,weights
 
-import numba
-from numba import jit
-import itertools
-
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
@@ -136,7 +132,7 @@ def checkFace(face, simplex):
 
 #build boundary matrix for dimension n ---> (n-1) = p
 def filterBoundaryMatrix(filterComplex):
-    bmatrix = np.zeros((len(filterComplex[0]),len(filterComplex[0])), dtype='>i8')
+    bmatrix = np.zeros((len(filterComplex[0]),len(filterComplex[0])), dtype='int8')
     #bmatrix[0,:] = 0 #add "zero-th" dimension as first row/column, makes algorithm easier later on
     #bmatrix[:,0] = 0
     i = 0
@@ -148,6 +144,9 @@ def filterBoundaryMatrix(filterComplex):
         i += 1
     return bmatrix
 #returns row index of lowest "1" in a column i in the boundary matrix
+
+#returns row index of lowest "1" in a column i in the boundary matrix
+@njit
 def low(i, matrix):
     col = matrix[:,i]
     col_len = len(col)
@@ -156,6 +155,7 @@ def low(i, matrix):
     return -1 #if no lowest 1 (e.g. column of all zeros), return -1 to be 'undefined'
 
 #checks if the boundary matrix is fully reduced
+@jit
 def isReduced(matrix):
     for j in range(matrix.shape[1]): #iterate through columns
         for i in range(j): #iterate through columns before column j
@@ -166,11 +166,12 @@ def isReduced(matrix):
     return [0,0]
 
 #the main function to iteratively reduce the boundary matrix
+@jit
 def reduceBoundaryMatrix(matrix): 
     #this refers to column index in the boundary matrix
     reduced_matrix = matrix.copy()
     matrix_shape = reduced_matrix.shape
-    memory = np.identity(matrix_shape[1], dtype='>i8') #this matrix will store the column additions we make
+    memory = np.identity(matrix_shape[1], dtype='int8') #this matrix will store the column additions we make
     r = isReduced(reduced_matrix)
     while (r != [0,0]):
         i = r[0]
@@ -182,6 +183,7 @@ def reduceBoundaryMatrix(matrix):
         memory[i,j] = 1
         r = isReduced(reduced_matrix)
     return reduced_matrix, memory
+
 def readIntervals(reduced_matrix, filterValues): #reduced_matrix includes the reduced boundary matrix AND the memory matrix
     #store intervals as a list of 2-element lists, e.g. [2,4] = start at "time" point 2, end at "time" point 4
     #note the "time" points are actually just the simplex index number for now. we will convert to epsilon value later
