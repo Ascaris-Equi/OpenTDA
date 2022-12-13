@@ -27,8 +27,13 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
                     weights.append(dist)
     return nodes,edges,weights
 
+@jit
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
-    return {x for x in nodeSet if {x,node} in edgeSet and node > x}
+    lnbrs=set()
+    for x in nodeSet:
+        if {x,node} in edgeSet and node > x:
+            lnbrs.add(x)
+    return lnbrs
 
 def getFilterValue(simplex, edges, weights): #filter value is the maximum weight of an edge in the simplex
     oneSimplices = list(itertools.combinations(simplex, 2)) #get set of 1-simplices in the simplex
@@ -37,6 +42,11 @@ def getFilterValue(simplex, edges, weights): #filter value is the maximum weight
         filter_value = weights[edges.index(set(oneSimplex))]
         if filter_value > max_weight: max_weight = filter_value
     return max_weight
+
+def VR_filter_zero(nodes):
+    VRcomplex = [{n} for n in nodes]
+    filter_values = [0 for j in VRcomplex]
+    return VRcomplex, filter_values
 
 def compare(item1, item2): 
     #comparison function that will provide the basis for our total order on the simpices
@@ -72,8 +82,7 @@ def sortComplex(filterComplex, filterValues): #need simplices in filtration have
         
 def ripsFiltration(graph, k): #k is the maximal dimension we want to compute (minimum is 1, edges)
     nodes, edges, weights = graph
-    VRcomplex = [{n} for n in nodes]
-    filter_values = [0 for j in VRcomplex] #vertices have filter value of 0
+    VRcomplex, filter_values = VR_filter_zero(nodes)
     for i in range(len(edges)): #add 1-simplices (edges) and associated filter values
         VRcomplex.append(edges[i])
         filter_values.append(weights[i])
