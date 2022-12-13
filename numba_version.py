@@ -140,7 +140,7 @@ def checkFace(face, simplex):
         return 1
     else:
         return 0
-
+@jit
 #build boundary matrix for dimension n ---> (n-1) = p
 def filterBoundaryMatrix(filterComplex):
     bmatrix = np.zeros((len(filterComplex[0]),len(filterComplex[0])), dtype='int8')
