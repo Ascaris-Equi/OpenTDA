@@ -27,7 +27,6 @@ def buildGraph(raw_data, epsilon = 3.1, metric=euclidianDist): #raw_data is a nu
                     weights.append(dist)
     return nodes,edges,weights
 
-@njit
 def lower_nbrs(nodeSet, edgeSet, node): #lowest neighbors based on arbitrary ordering of simplices
     return {x for x in nodeSet if {x,node} in edgeSet and node > x}
 
