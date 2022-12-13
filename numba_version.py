@@ -4,6 +4,7 @@ import itertools
 import functools
 import numba
 from numba import jit
+from numba import njit
 
 @njit
 def euclidianDist(a,b):
